@@ -42,22 +42,25 @@
       <section class="posts container">
         <h2>Latest posts</h2>
 
-        <div class="post-list">
-          <article class="post-card">
-            <h3>Post 1: The Project Begins</h3>
-            <p class="summary">Kickoff notes, goals and initial architecture ideas for The Logbook project. Placeholder summary text to show layout.</p>
-          </article>
+        <form class="new-post-form" id="new-post-form" aria-label="Create new post">
+          <div class="form-row">
+            <input type="text" id="post-title" name="title" placeholder="Title" required />
+            <input type="text" id="post-slug" name="slug" placeholder="Slug (e.g. project-begins)" required />
+          </div>
+          <div class="form-row">
+            <input type="text" id="post-author" name="author" placeholder="Author (optional)" />
+          </div>
+          <div class="form-row">
+            <textarea id="post-content" name="content" placeholder="Write the post content here..." rows="4" required></textarea>
+          </div>
+          <div class="form-row form-actions">
+            <button type="submit" id="post-submit">Create Post</button>
+            <span class="form-feedback" id="form-feedback" aria-live="polite"></span>
+          </div>
+        </form>
 
-          <article class="post-card">
-            <h3>Post 2: Database Design</h3>
-            <p class="summary">Initial thoughts on data models, relationships, and migration strategy for a simple blogging logbook.</p>
-          </article>
-
-          <article class="post-card">
-            <h3>Post 3: Frontend Wireframes</h3>
-            <p class="summary">Wireframes and layout decisions for homepage, post pages, and admin flows. Placeholder content for visual testing.</p>
-          </article>
-
+        <div class="post-list" id="post-list">
+          <div class="loading">Loading posts…</div>
         </div>
       </section>
     </main>
@@ -81,6 +84,107 @@
           this.setAttribute('aria-expanded', !expanded);
           nav.classList.toggle('open');
         });
+      })();
+
+      // Fetch and render posts from the backend
+      (function(){
+        const listEl = document.getElementById('post-list');
+
+        function summarize(text, limit = 160){
+          if(!text) return '';
+          const cleaned = text.replace(/\s+/g, ' ').trim();
+          return cleaned.length > limit ? cleaned.slice(0, limit).trim() + '…' : cleaned;
+        }
+
+        function renderPosts(posts){
+          listEl.innerHTML = '';
+          if(!posts || posts.length === 0){
+            listEl.innerHTML = '<p class="muted">No posts yet. Create one via the API.</p>';
+            return;
+          }
+
+          posts.forEach(p => {
+            const article = document.createElement('article');
+            article.className = 'post-card';
+
+            const h3 = document.createElement('h3');
+            const a = document.createElement('a');
+            a.href = '/posts/' + encodeURIComponent(p.slug);
+            a.textContent = p.title;
+            h3.appendChild(a);
+
+            const summary = document.createElement('p');
+            summary.className = 'summary';
+            summary.textContent = summarize(p.content || '');
+
+            article.appendChild(h3);
+            article.appendChild(summary);
+            listEl.appendChild(article);
+          });
+        }
+
+        async function fetchPosts(){
+          listEl.innerHTML = '<div class="loading">Loading posts…</div>';
+          try{
+            const res = await fetch('/api/posts');
+            if(!res.ok) throw new Error('Network response was not ok');
+            const posts = await res.json();
+            renderPosts(posts);
+          }catch(err){
+            console.error('Failed to fetch posts', err);
+            listEl.innerHTML = '<p class="muted">Failed to load posts. Try again later.</p>';
+          }
+        }
+
+        // initial load
+        fetchPosts();
+
+        // Form handling: create new posts from the UI
+        const form = document.getElementById('new-post-form');
+        const feedback = document.getElementById('form-feedback');
+        const submitBtn = document.getElementById('post-submit');
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          feedback.textContent = '';
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Creating…';
+
+          const title = document.getElementById('post-title').value.trim();
+          const slug = document.getElementById('post-slug').value.trim();
+          const author = document.getElementById('post-author').value.trim();
+          const content = document.getElementById('post-content').value.trim();
+
+          try{
+            const res = await fetch('/api/posts/new', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, slug, content, author })
+            });
+
+            if(res.status === 201){
+              feedback.textContent = 'Post created.';
+              feedback.classList.remove('error');
+              form.reset();
+              // reload posts
+              fetchPosts();
+            } else {
+              const data = await res.json().catch(()=>({ error: 'Unknown error' }));
+              feedback.textContent = data.error || 'Failed to create post.';
+              feedback.classList.add('error');
+            }
+          }catch(err){
+            console.error(err);
+            feedback.textContent = 'Network error. Try again.';
+            feedback.classList.add('error');
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Post';
+          }
+        });
+
+        // optional: poll for changes every 30s
+        // setInterval(fetchPosts, 30000);
       })();
     </script>
   </body>
