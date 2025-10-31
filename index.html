@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>The Logbook — Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a href="#" class="logo">The Logbook</a>
+        </div>
+
+        <nav class="site-nav" id="primary-navigation" aria-label="Primary Navigation">
+          <ul class="nav-list">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <button class="nav-toggle" id="nav-toggle" aria-controls="primary-navigation" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="hamburger"></span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h1>Welcome to The Logbook</h1>
+          <p class="lead">A simple place to record progress, ideas, and projects. Static for now — content will be dynamic later.</p>
+        </div>
+      </section>
+
+      <section class="posts container">
+        <h2>Latest posts</h2>
+
+        <div class="post-list">
+          <article class="post-card">
+            <h3>Post 1: The Project Begins</h3>
+            <p class="summary">Kickoff notes, goals and initial architecture ideas for The Logbook project. Placeholder summary text to show layout.</p>
+          </article>
+
+          <article class="post-card">
+            <h3>Post 2: Database Design</h3>
+            <p class="summary">Initial thoughts on data models, relationships, and migration strategy for a simple blogging logbook.</p>
+          </article>
+
+          <article class="post-card">
+            <h3>Post 3: Frontend Wireframes</h3>
+            <p class="summary">Wireframes and layout decisions for homepage, post pages, and admin flows. Placeholder content for visual testing.</p>
+          </article>
+
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>&copy; <span id="year"></span> The Logbook — Built with care.</p>
+      </div>
+    </footer>
+
+    <script>
+      // set copyright year
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // mobile nav toggle
+      (function(){
+        const btn = document.getElementById('nav-toggle');
+        const nav = document.getElementById('primary-navigation');
+        btn.addEventListener('click', function(){
+          const expanded = this.getAttribute('aria-expanded') === 'true' || false;
+          this.setAttribute('aria-expanded', !expanded);
+          nav.classList.toggle('open');
+        });
+      })();
+    </script>
+  </body>
+</html>
