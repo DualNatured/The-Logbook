@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>The Logbook — Post</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Marked (markdown parser) and DOMPurify (sanitizer) from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a href="/" class="logo">The Logbook</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <article class="post-article">
+        <h1 id="post-title">Loading…</h1>
+        <p class="meta" id="post-meta"></p>
+        <div id="post-content" class="post-content">Loading content…</div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>&copy; <span id="year"></span> The Logbook — Built with care.</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // extract slug from the pathname: /posts/:slug
+      const pathParts = location.pathname.split('/').filter(Boolean);
+      const slug = pathParts.length >= 2 ? pathParts[1] : pathParts[0];
+
+      async function loadPost(slug){
+        try{
+          const res = await fetch('/api/posts/' + encodeURIComponent(slug));
+          if(res.status === 404){
+            document.getElementById('post-title').textContent = 'Post not found';
+            document.getElementById('post-content').textContent = '';
+            return;
+          }
+          if(!res.ok) throw new Error('Network error');
+          const post = await res.json();
+
+          document.getElementById('post-title').textContent = post.title;
+          document.getElementById('post-meta').textContent = `${post.author || 'Anonymous'} — ${new Date(post.date).toLocaleString()}`;
+
+          // convert markdown to HTML using marked, then sanitize with DOMPurify
+          try{
+            const rawHtml = marked.parse(post.content || '');
+            const clean = DOMPurify.sanitize(rawHtml, {ALLOWED_TAGS: false}); // use default allowlist
+            document.getElementById('post-content').innerHTML = clean;
+          }catch(err){
+            console.error('Markdown render error', err);
+            document.getElementById('post-content').textContent = post.content;
+          }
+        }catch(err){
+          console.error(err);
+          document.getElementById('post-title').textContent = 'Error loading post';
+          document.getElementById('post-content').textContent = '';
+        }
+      }
+
+      if(slug){
+        loadPost(slug);
+      } else {
+        document.getElementById('post-title').textContent = 'Invalid post URL';
+        document.getElementById('post-content').textContent = '';
+      }
+    </script>
+  </body>
+</html>
