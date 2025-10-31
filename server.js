@@ -43,6 +43,24 @@ app.post('/api/posts/new', (req, res) => {
   }
 });
 
+// API: get single post by slug
+app.get('/api/posts/:slug', (req, res) => {
+  try{
+    const slug = req.params.slug;
+    const post = db.getPostBySlug(slug);
+    if(!post) return res.status(404).json({ error: 'Post not found' });
+    res.json(post);
+  }catch(err){
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch post' });
+  }
+});
+
+// Serve post page for client-side rendering
+app.get('/posts/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'post.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });

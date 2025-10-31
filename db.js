@@ -20,6 +20,7 @@ const insertStmt = db.prepare(`INSERT INTO posts (title, slug, content, author, 
 VALUES (@title, @slug, @content, @author, @date)`);
 
 const getAllStmt = db.prepare(`SELECT id, title, slug, content, author, date FROM posts ORDER BY date DESC`);
+const getBySlugStmt = db.prepare(`SELECT id, title, slug, content, author, date FROM posts WHERE slug = ? LIMIT 1`);
 
 module.exports = {
   createPost(post){
@@ -29,4 +30,9 @@ module.exports = {
   getAllPosts(){
     return getAllStmt.all();
   }
+  ,
+  getPostBySlug(slug){
+    return getBySlugStmt.get(slug);
+  }
 };
+
